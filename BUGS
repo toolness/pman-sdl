@@ -1,0 +1,16 @@
+Pman BUGS
+
+Mac OS X:
+---------
+
+  If you're using "thousands of colors" (15/16-bpp color depth),
+  windowed mode blits might not work.  Fullscreen mode works fine, and
+  pixel draws work fine in windowed mode, but blits don't.  I'm
+  attributing this bug to SDL, since I'm pretty sure I'm using the
+  proper protocol for querying the graphics hardware and setting the
+  video mode.  Everything works fine under "millions of colors",
+  though.
+
+  There's some kind of text error message that displays on the console
+  whenever you switch from windowed to fullscreen mode.  It doesn't
+  crash anything, though.

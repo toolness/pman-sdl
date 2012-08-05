@@ -1,0 +1,37 @@
+Object-Oriented Thoughts
+------------------------
+
+These are more notes on the viability of converting pman to an
+object-oriented framework.  Many of my broader thoughts on this are
+covered in the pman postmortem.
+
+The ghost AI routines would be excellent candidates for the Strategy
+pattern.  Just look at all the reused code!
+
+Clearly, the FSM-related code would be good candidates for the State
+pattern.  Also possibly the chain of command pattern, or something to
+allow for "sub-states".
+
+The game.c "GameState" architecture is a weak implementation of the MVC
+architectural pattern; implementing a recursive chain-of-command using
+the composite pattern could make it more robust if we want to reuse it
+for other, more complex applications.
+
+The whole event system would be good for the Chain of Command pattern.
+
+The game board, or even the pman.c singleton, could make a good
+composite pattern.
+
+For extensibility, an abstract factory could be used to generate the
+board tiles, and/or pman and the ghosts.
+
+A bridge pattern could be used between the model and the graphical
+representation of objects on the screen, so we could have a single
+model but many different views to represent it (all accessible through
+an abstract factory).
+
+The AI would be an excellent place for the Visitor pattern, especially
+for pathfinding algorithms; when a specific pathfinding algorithm
+"visits" a new block, it literally "visits" what's in the block.  This
+way the pathfinding algorithm can react differently depending on what
+it hits.

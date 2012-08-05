@@ -1,0 +1,24 @@
+Pman Instructions
+
+The game pretty much plays like Namco's Pac Man.
+
+Global Keys (can be used anytime):
+----------------------------------
+
+CTRL-F     -- Switch between fullscreen/windowed mode
+
+F          -- Display framerate statistics
+
+Main Menu:
+----------
+
+Arrow keys -- Navigate menus
+
+Return     -- Activate the currently selected menu option
+
+Play Mode:
+----------
+
+Arrow keys -- Move pman in the given direction
+
+ESC        -- Quit play mode and return to the main menu

@@ -1,0 +1,79 @@
+To compile Pman:
+----------------
+1. Run './configure'.
+2. Run 'make'.
+3. Run 'make install'.
+
+To run Pman:
+------------
+1. Go into the 'release' directory.
+2. Depending on your OS, run either "pman" (Unix/MacOSX) or "pman.exe".
+
+Note that in this project, "make install" has
+been rewritten to copy all essential program files into the "release"
+directory.
+
+Similarly, "make uninstall" deletes the "release" directory and
+everything inside it.
+
+Compilation prerequisites:
+--------------------------
+
+The only third-party library this application requires is the Simple
+DirectMedia Layer, available for most platforms at
+http://www.libsdl.org.  Note that although the configure script checks
+for SDL 1.2.0 or higher, in practice the application has only been
+tested with SDL 1.2.5.
+
+Cross-platform compatibility:
+-----------------------------
+
+Pman has been compiled and run successfully on the following platforms
+and compilers:
+
+  MacOS X 10.2 ("Jaguar") using gcc 3.1
+  RedHat Linux 8.0 ("Psyche") using gcc 3.2
+  Windows 2000 using Microsoft Visual C++ .NET 2002
+  Windows 2000 using Cygwin and gcc 3.2
+
+Additionally, Pman has run successfully on the following platforms:
+
+  Windows 98
+  Windows XP
+
+MacOS X notes:
+--------------
+
+Don't download the precompiled SDL OS X development package; this
+installs an OS X framework that can be used with Apple's Project
+Builder, but it doesn't seem to be compatible with the Unix library
+version of SDL that the configure/make cycle uses.  So download
+the source to the SDL library, compile, and install it.
+
+Windows notes:
+--------------
+
+If you are using Windows, the configure/make cycle probably won't
+work unless you're using Cygwin32 and have the SDL library installed
+under it.
+
+If you want to compile Pman under Win32 using Visual C++ .NET, use the
+project contained in the 'VisualC' directory.  You will also need to
+make sure you have the SDL library and include paths set up in your
+project or global preferences.  To compile this properly, you must
+run "configure --disable-sdl" in the root directory; after doing
+this, build the project in MS Visual Studio, and then run "make
+install" in the root directory.  Note that even compiling using MS
+Visual Studio still requires Cygwin, although it doesn't require SDL
+under Cygwin (this is because the configure script creates the
+config.h file, which passes on needed information to Visual C++).
+
+If you have Cygwin32 but don't have the SDL library, you can still
+maintain the package (although you can't compile it unless you go the
+MSVC++ route).  To do this, run configure with the '--disable-sdl'
+option.  This will allow configure to create a makefile, but you won't
+be able to actually compile the binary via 'make'.  You can, however,
+make any modifications to the package and use 'make dist' to
+re-distribute the modified package.  If you do this, make sure you're
+using the 'ntea' option with Cygwin so that POSIX file permissions are
+preserved.

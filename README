@@ -1,0 +1,61 @@
+Pman README
+
+Atul Varma - 8/6/2003
+
+Pman is a Pac-Man clone I created over a period of about three weeks
+of intermittent coding.  The main document that analyzes the research
+goals and progress of this project can be found in the postmortem at
+'docs/postmortem.html'.
+
+Directory structure:
+--------------------
+
+/:
+
+  The project's root directory contains source files used by the GNU
+  build utilities, as well as the standard documents and a few extra
+  scripts.
+
+    INSTALL - How to install/compile the project on different
+    platforms.
+
+    BUGS - Current bugs in the code.
+
+    NEWS - Version history document.
+
+    AUTHORS - Project credits.
+
+    auto-rebuild.sh - This script runs all the GNU autotools over
+    again to rebuild the configure script, makefile.in's,
+    config.h.in, aclocal.m4, etc...
+
+    auto-package.sh - This script just builds the source distribution
+    archive (e.g., "pman-0.1.1.tar.gz") from the sources.
+
+docs/:
+
+  Contains documentation for the Pman project.
+
+    postmortem.html - Postmortem for the project, in the spirit of
+    the postmortems on Gamasutra (http://www.gamasutra.com).  This
+    document outlines what the research goals of the project were,
+    what went right and wrong, and analyzes the overall progress of
+    the project.
+
+    oo_notes.txt - Additional notes on the possibilty of modifying
+    Pman to use an object-oriented framework.
+
+    instructions.txt - Instructions on how to play the game.
+
+/src/:
+
+  The project source code.
+
+/resources/:
+
+  Media resources for the project (graphics, sound, etc).
+
+/VisualC/:
+
+  The MS Visual C++ .NET 2002 (aka VC++ 7.0) project files for
+  the Pman project.
