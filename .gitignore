@@ -1,0 +1,8 @@
+*.o
+Makefile
+src/pman
+config.h
+config.log
+config.status
+src/.deps/
+stamp-h1
