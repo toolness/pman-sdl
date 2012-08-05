@@ -1,0 +1,509 @@
+<h1>Pman Postmortem</h1>
+<p>
+Atul Varma - July 29, 2003
+<p>
+Pman is a Pac-Man clone I created over a period of about three weeks of
+intermittent coding.  You can download the source tarball <A HREF="pman-0.1.5.tar.gz">here</A>.
+<P>
+<CENTER><A HREF="pman_screen0.jpg"><IMG SRC="pman_screen0_thumb.jpg" BORDER=0></A> 
+<A HREF="pman_screen1.jpg"><IMG SRC="pman_screen1_thumb.jpg" BORDER=0></A></CENTER>
+<P>
+The core game logic and graphics are fully implemented:
+there's a main menu, hi-score list, and a demo (aka attract) mode; once the
+game starts, Pac-Man can eat fruits, pellets and power pellets, be killed
+by ghosts and eat them, win levels to face-off against harder ghosts,
+and so forth.  A scoreboard keeps track of the player's score and
+lives left.  Everything is fully animated, except for Pac-Man's
+gruesome death.
+<P>
+The game's codebase is platform-independent, and the game has
+been compiled and run successfully on Windows, Mac OS X, and Linux.
+<P>
+The only third-party code involved in this project was
+the use of the Simple DirectMedia Layer (<a
+href="http://www.libsdl.org">libsdl.org</a>), a cross-platform,
+low-level multimedia API.  This library provided basic routines for video
+access, blitting, and bitmap loading, as well as input and timing
+functionality.  All
+other code was written by myself.  Finite State Machines were
+researched and implemented to represent the gameplay state and the
+game agents, and a time-based message routing subsystem allowed them to communicate
+with each other; integer-based fixed-point math routines were derived and
+used for real number calculations; drawing algorithms were
+researched and implemented for the rendering of basic graphics
+primitives such as lines, circles, and triangles, and these functions
+were combined to dynamically generate graphics for Pac-Man and the
+ghosts on-the-fly; shortest-path algorithms were researched and
+implemented for ghost AI;  a basic bitmap font library was coded to draw text
+to the screen; and a model-view-controller architecture was used to
+provide for extensible, "pluggable" game modules.  This architecture
+also provided for a framework that semi-decoupled game logic
+from on-screen rendering (described in more detail below).
+<p>
+<h3>Goals:</h3>
+The purposes of the Pman project were manifold:
+<ul>
+<li>I wanted to create a game that was more complex and challenging to
+create than tetris/pong/breakout (all of which I had done before),
+but not too complex for a single person to complete in a relatively short
+period of time.<P>
+<li>I wanted to test "first-hand" the perceived need for
+object-oriented programming.  OO proponents have always said that
+using OO methodologies is very useful for complex projects in which
+traditional procedural code would become prohibitively complicated and
+difficult to understand, maintain, and extend.  Although I've done a
+fair share of procedural and OO programming, I didn't believe I had
+undertook a procedural project complex enough to warrant the use of OO
+methodologies.  To test the OO thesis for myself, I wanted to first code a
+semi-complex project in a procedural language and then analyze the
+resulting architecture to determine how helpful it would have been to
+use OO methodologies.  In <i>Design Patterns</i>, Gamma et al indicate
+that the object-oriented paradigm was originally a set of
+"design patterns"--namely, inheritance, polymorphism, and
+encapsulation--that began to manifest themselves in highly complex
+procedural projects.  Thus, my
+theory was that if the OO thesis is correct and the project complex
+enough, designing a good procedural architecture should virtually
+necessitate the implementation of (or at least beg the need for)
+said patterns.<p>
+<li>I wanted to create a completely cross-platform game.  This is
+largely accomplished through the use of the SDL library, and it's a
+large part of why I decided to use SDL in the first place (as DirectX
+is very platform-dependent).<p>
+<li>I wanted to build better programming habits in the context of a
+medium-sized project.  Kent Beck once said, "I'm not a great
+programmer.  I'm a good programmer with great habits."  I currently
+consider myself to have poor habits, so this project was an attempt to
+build a codebase that would be easier to understand than my previous
+projects, by consciously using an iterative development cycle and some
+basic refactoring strategies.  Having recently read parts of
+Fowler's <i>Refactoring</i>, I
+wanted to try to "evolve" my code by first writing the simplest
+situation possible--Pac-Man wandering around a board with no enemies
+and no pellets, in this case--and then iteratively building upon that
+solution by alternating between phases of adding functionality and
+refactoring.<p>
+<li>I wanted to write a post-mortem.  I've done a number of
+programming projects before, but I have never retrospectively written
+down my thoughts on the development process.  After reading a number
+of post-mortems on <a href="http://www.gamasutra.com">Gamasutra</a>
+and reading Mark Fowler, Kent Beck and others reminisce about previous
+projects, I thought it would be helpful to write a post-mortem about
+my next medium-sized programming project so that by elucidating what
+I'd learned from the project, I'd obtain a better understanding of
+software development, and I'd be more likely to not repeat the same
+mistakes in the future.
+</ul>
+<p>
+<h3>What went right:</h3>
+<UL>
+<B>Pre-planning.</B>
+<P>
+Before doing any coding, I sat down and wrote down basic finite state
+machines for how I thought the game worked.  This got me thinking
+about what the various game tokens were, how they interacted, and so
+forth.  It also gave me a general idea of the complexity of the
+project, although this turned out to be an underestimation (more
+on this later).
+<P>
+<B>Modularity.</B>
+<P>Unlike previous C code I've written, this program was pretty
+modular.  No global variables were used, and module variables (i.e., static
+local variables with internal linkage) were kept to a minimum and
+their data was accessed
+by other modules using (reasonably) restrictive accessor functions.
+This kept things pretty understandable at all times, although there
+were a few instances where I didn't know what module to put a function
+in (for instance, should the <TT>map_fixed_vector_to_direction()</TT> function
+be put in the fixed point vector module, or the drawing module, where
+directional constants are defined and used?).
+<P>
+<B>Refactoring.</B>
+<P>Although code did get pretty messy at times, I tried my best to go
+back after a few hours worth of work to do some commenting and apply
+OO-style refactoring principles (a la Fowler, et al.) to this
+procedural code.  "Extract method" was used on functions a lot to
+consolidate redundant code, "pull up method" was used in the GameAgent
+class to reuse code shared by pac man, fruits, and the ghosts, "magic numbers"
+were converted to constants, and sometimes functions were heavily
+modified to make them more readable.  There is still a lot of code
+that is messy, but it's debatable as to whether it would be productive
+to refactor it since the project won't really be extended.
+<P>
+<B>Asserts.</B>
+<P>
+For the first time, I used C's <TT>assert()</TT> macro in my code, which
+increased readability and helped in bug-squishing without impairing
+the performance of production-level code.
+<P>
+<B>Finite State Machines.</B>
+<P>The finite state machine model described in Steve Rabin's article in
+<i>Game Programming Gems</i> made coding the behavior for ghosts
+particularly easy.  Its benefits for other game tokens was debatable,
+however; the FSM model seems to be most useful for tokens that can be
+in multiple states and behave differently depending on those states,
+and the message routing model described in Rabin's article is very
+helpful when a message needs to be processed some amount of time after
+it is sent.  However, these two things weren't extremely prevalent in
+the rest of the code, so sometimes I wondered if the payoff was worth
+it; yet I imagine that not using the FSM model would have resulted in
+tons of global variables and code that would have been far more
+spaghetti-like than it already is.
+<P>
+However, I did have a few issues with the FSM model, although it was
+partially because it was the first time I had modeled a
+moderately complex application using a FSM.  For instance, the passing of parameterized information
+became difficult with the FSM's message routing model; this meant that
+it was much more cumbersome to send a message using a FSM than it was
+to simply make a function call, and figuring out which way to go in
+order to make the code more understandable was a learning experience.
+Sometimes it was also difficult figuring out which FSM to implement a
+behavior in, and I'm still confused about this in some cases; for
+instance, a behavior that seems like it should belong in the game
+board FSM may actually need to be implemented in the play state FSM
+because the behavior affects several different game tokens and changes
+the state of the entire game to some extent.  Even the creation of a
+play state FSM separate from a game board FSM was debatable, although
+I'm sure this is a conflict I would have run into had I used OO
+methodologies or even non-FSM based procedural code.  In other cases,
+I sometimes created a new state message type instead of reusing old
+ones, which felt like it bloated code, although it may have made it a
+little easier to understand in the long-run, since state messages had
+names that were very specific to the actual actions they performed.
+<P>
+<B>Semi-decoupling of game logic from drawing.</B>
+<P>
+I borrowed this idea from <I>Game Architecture and Design</I> by
+Rollings and Morris.  The game loop is executed as fast as possible,
+and the model (game logic) is passed a parameter that indicates how
+much time has passed since it was last called.  (This parameter is in
+milliseconds and has a maximum value defined in a .h file, which is
+currently defined as being about 200 milliseconds.)  Thus the
+game always moves at the same speed on all computers (unless the
+computer is so slow as to play the game at less than 5 frames per
+second) but it plays smoother depending on how fast the computer is.
+This ensures that it can play on a wide variety of platforms.
+<P>
+<B>Dirty rectangles.</B>
+<P>
+The screen isn't redrawn anew each frame unless a particular game
+token says  that it should be.  In most cases, the screen stays the
+same and the background behind the game agents' rectangles last frame is
+just repainted, and the game agents are redrawn again at their new
+location.  This made the game run at about 2300 fps windowed, 3600
+fps fullscreen on my P3 800 mhz laptop.  If I
+converted the ghost draws to straight blits of dynamically
+pre-rendered graphics (which is currently how the Pac-Man sprite is displayed),
+the game could run faster, and it would probably be
+even faster if I told the graphics library to put all the surfaces in
+video memory (which would be extremely efficient, I think, since the game
+code would never make the CPU modify any bitmap surfaces using
+non-blitting routines).
+<P>
+<B>The MS Visual Studio IDE.</B>
+<P>I managed to wean myself off emacs to try out the MS VS IDE, and
+it's very useful.  Split-screen/pane features are similar to those of
+emacs, and most useful are the context-sensitive IntelliSense "auto-complete"
+features that automatically give you a pop-up list of all a structure's data
+members as soon as you use the dot or arrow operator, show you the
+parameter list for a function you're calling as soon as you type the
+opening parenthesis, function and constant name auto-completion at the
+press of ALT-RIGHT ARROW, and so forth.  This saved me a lot of time
+because it meant I didn't have to go sifting through my code to
+remember what something was named.  Another feature where you can
+right-click the name of a function or variable in your code and select
+"Go to declaration" and/or "Go to definition" and be taken to the
+appropriate point in the appropriate file was also very useful.
+<P>
+<B>The MS Visual Studio Debugger.</B>
+<P>
+In the past, I haven't used a debugger much to debug programs (I've usually
+resorted to <TT>printf()</TT> statements), but for this project I learned the
+basics of the debugger.  Setting breakpoints and using step
+into/over/out of features was very useful for squishing bugs, as was
+being able to watch variables as they changed.
+<P>
+<B>Knowledge of software requirements.</B>
+<P>
+Because Pac-Man already exists, I had an excellent "blueprint" for the
+game and was able to find and play with a clone of it to figure
+out nuances of the game's behavior (although I never looked at anyone else's
+source code, since that was part of the challenge).  Thus playing Pac-Man
+made the game's software requirements clear for the most part; if I
+were coding a game that had never been done before and had no
+such "blueprints" to work off of, I would have
+had to focus more on writing down the requirements and prototyping the
+game in a higher-level language like Python.
+<P>
+<B>Platform independence.</B>
+<P>
+I originally coded the game using MS Visual C++.  Fortunately, using
+SDL allowed my multimedia modules to be largely platform-independent.
+After the codebase was stabilized, I learned how to use the GNU build
+tools automake and autoconf, using them with Cygwin for Windows (available at <a
+href="http://www.cygwin.com">www.cygwin.com</a>) to create a
+cross-platform framework for compiling the game,
+as well as for modifying and distributing its source code.  This made
+porting the game to other Unix-based platforms extremely simple and
+straightforward, and it also made it much easier to maintain my
+software.
+</UL>
+<h3>What went wrong:</h3>
+<UL>
+<B>C.</B>
+<P>I utterly despise this language sometimes.  Not that it's bad--it's
+obviously a godsend compared to assembly, but it leaves much to be
+desired when it comes to the other programming languages in the market
+today.  Specific areas of frustration in this project included:
+<UL>
+<P>
+<LI><B>Header files.</B>  Forward declaration of functions is extremely
+tedious--especially when constant changes in the evolving framework
+mean modifying the definition <i>and</i> the declaration of a function
+when parameters or function names change.  Furthermore, having to put
+all the function declarations in the module's .h file can confuse
+readers because they don't know which functions are in the module's
+public interface and which ones are internal to the module.  Granted,
+this is partially my fault, as I should have named the functions
+accordingly (e.g., starting a private function with "_"), but as I
+mentioned earlier, changing the name of a function is tedious,
+especially when I don't know if the function will "go public" again at
+some point.  Being able to put the function declaration in a "public"
+or "private" part of a header definitely would've helped (reminds me
+of the "Interface" and "Implementation" sections of Turbo Pascal
+modules), and of course doing away with the very concept of forward
+declarations (a la Java) would have been even more helpful and would
+have reduced frustration and increased productivity a great deal.  In
+any case, header files are my primary complaint about the C/C++
+language because they slow the coding process and make refactoring
+very time-consuming.
+<P>
+<LI><B>Lack of default arguments for functions.</B> This
+was a minor inconvenience, but nonetheless something I missed from
+languages that offered this feature.  Whenever I wanted to add a
+parameter to a function, I had to find every occurence of it in the
+code and insert the parameter with its default value (either that or I
+could make the original function a "wrapper" to another function with
+additional parameters, but this would have gotten very messy).
+<P>
+<LI><B>Non-object-oriented programming.</B>  Part of the reason I
+wanted to do this project in a procedural language was so I could
+determine whether OO is really "worth it" for 
+projects of this size.  My verdict is that it is very useful.
+Granted, my view could be skewed somewhat, as I was effectively
+trying to program in an OO mindset using a procedural language;
+however, Bruce Eckel indicates in <i>Thinking in C++</i> that many of
+the techniques I used had been employed by C programmers who
+didn't know anything about OO programming, so it seems as though
+procedural frameworks have always been evolving towards OO frameworks
+to some extent.
+<P>
+<UL>
+<LI>A number of modules (game, pman, state, etc) could have
+been implemented as Singletons, which would have made their code
+easier to read and understand.
+<P>
+<LI>As Bruce Eckel mentions in <i>Thinking in C++</i>, C doesn't have any
+language features to facilitate the initializing and de-initializing
+of data.  A <TT>*_init()</TT> and <TT>*_destroy()</TT> function had to be manually
+created for many objects, but many game objects didn't have these at
+first because they didn't need data to be initialized or destroyed.
+After these functions were made, I had to go through all the code and
+insert them wherever I saw the game objects being instantiated, hoping
+that I didn't miss anything.  All of this would've been automatically
+taken care of in an OO language supporting constructors/destructors.
+<P>
+<LI>Inheritance would have helped a lot in the construction of
+the ghost, fruit, and pman game agents.  In the beginning, there was a single
+structure and related functions for game agents, but as pman, fruits, and
+ghosts became more specialized, I had to create special functions for
+each and special data members were merged into the game agent
+structure.  Currently, the game agent structure is a mixed bag
+containing some data members that pman, the ghosts, and fruits use, some
+that pman only uses, and some that ghosts only use, and so forth.   Granted, I could
+have used aggregation to store fruit/ghost/pman-specific data, but it would
+be difficult to change code if I wanted to move a data member to the game
+agent superclass.  Also, there is polymorphic behavior in some
+functions for the game agent object (e.g., the <TT>game_agent_draw()</TT>
+function), but they all use static "if-then" statements.  Code would
+have been greatly decoupled and easier to understand if polymorphism
+and inheritance were a language feature.
+<P>
+<LI>Encapsulation would have helped a great deal with a number of
+object-like structures and the functions associated with them--for
+instance, fixed-point numbers, fonts, game agents, states, and tons of
+other entities all have structures and functions to operate on those
+structures.  Inevitably, the functions for these structures end up
+having big names like <TT>fixed_vector_add()</TT> and <TT>agent_ghost_destroy()</TT>
+which impairs the readability of code and also makes mis-naming
+functions much easier (e.g., "was it <TT>game_agent_ghost_destroy()</TT> or
+<TT>agent_ghost_destroy()</TT>?").  Encapsulation would have made the code
+much easier to comprehend and write.
+</UL>
+<P>
+</UL>
+<P>
+<B>Not using standard naming conventions for variables and functions.</B>
+<P>
+Although some care was taken to name variables and functions appropriately, such as
+prefixing a module variable with <TT>g_</TT>, and they were named
+meaningfully (i.e., I didn't call any variables
+<TT>eggsAndSpam</TT>), there were some other problems.  Firstly, there were
+some times when a variable wasn't named very accurately but I didn't
+rename them (e.g., calling
+a variable <TT>curr_nibbloon_kills</TT> instead of
+<TT>ghosts_killed_since_last_nibbloon</TT>, which would have been more
+understandable).  Also, prefixes
+should have been given for certain variables; e.g. prefixing a fixed
+point number with <TT>fix_</TT> would have helped make code more
+understandable.  There were also
+inconsistent naming conventions with functions; most notably,
+sometimes a structure's "constructor" would be called <TT>init()</TT>, other
+times a module's constructor would be called <TT>init()</TT>; when a module
+had the same name as a structure (see <TT>state.c</TT>), the module's
+constructor was called <TT>init()</TT> and the structure's constructor was
+called <TT>construct()</TT>, which confused things.  To make things even more
+confusing, the <TT>shutdown()</TT> method was usually the complement of
+<TT>init()</TT>, but sometimes it was <TT>destroy()</TT>.  Not actively focusing on
+naming conventions and their consistency impaired the readability of
+my code.  (As I mentioned in the previous section, though,
+encapsulation would have helped here, as it effectively gives you
+namespaces; many of the naming consistency problems here were a result
+of global namespace collisions, although they still could have been
+avoided if I'd paid more attention to them.)
+<P>
+<B>Bad programming habits and underestimating the project size.</B>
+<P>
+Although I did refactoring in this project, near the middle of
+development I started to get a little impatient because the project
+was taking a lot longer than I thought it would.  I had originally
+anticipated that the game would take a day or two to complete for the core
+coding and game logic, but the entire thing ended up taking a little
+over two weeks.  This was discouraging; I worried that sometimes I
+spent so much time refactoring or over-designing the architecture
+ that I was "spinning my wheels" and not spending
+enough time doing useful coding.  Other times I accused myself of the
+opposite--that I hadn't spent enough time looking ahead, and had to
+backtrack some of my programming because many of the implementations I had
+started turned out to be inadequate when I found out that they
+wouldn't be able to support some aspect of the game's functionality.
+Other times I simply attributed it to a perceived lack of programming
+skill.
+<P>
+This frustration was dealt with in positive and negative ways.
+Sometimes I told myself that I had to keep coding so I could finish
+the project in a timeframe that I felt was appropriate; this resulted
+in long hours of sitting in front of a computer, trying to work as
+quickly as possible so I could get the job done faster, and this
+usually only resulted in more frustration.  Encountering a minor bug
+resulted in more annoyance, which made me spend time being frustrated
+instead of actually fixing the code.
+<P>
+Other times, I simply took a break from coding, which helped clear my
+mind.  I would also try to put the situation in perspective: with a
+few exceptions, the game was actually being implemented in much the
+same way as it would have been ten or fifteen years ago (in fact,
+aside from some memory management issues, I wonder how well this game
+would run on older computers).  Pac-Man certainly would have taken
+a little longer to code than a weekend back then, so I assured myself
+that the project was just a lot more complex than I thought it'd be
+because I was doing so much "from scratch" and using a relatively
+low-level language for implementation.
+<P>
+Sometimes heavy frustration was a result of "bad smells" (to use Mark
+Fowler's terminology) in the code, and a solution was to refactor the
+code, which was almost like taking a break from coding because it
+was so easy.  Howver, given some of the frustrations with C noted
+above, this was sometimes very tedious, which got me annoyed at C and
+made me wish I was using Java or another language that resulted in
+more maintainable code.
+<P>
+Ultimately, what I really wish I had was what Extreme Programming
+calls "pair programming".  In my few experiences with pair
+programming, there was rarely ever a high level of frustration because
+two people were approaching the problem, which led to better solutions
+faster, and it also took pressure off both participants because they knew
+that finding the solution wasn't solely their responsibility--in
+social parlance, they had "a friend there to back them up", which
+reduced tension significantly.  As the extreme programming philosophy
+mentions, it's also much harder for two people two code with bad
+habits, which results in less bugs and cleaner code, which leads to
+far less frustration in the long run.  Pair programming also turns the
+otherwise solitary activity of coding into a social activity, which
+makes it incredibly fun and satisfying, which obviously helps reduce
+potential frustration even more.
+<P>
+<B>Inadequate understanding of the problem space.</B>
+<P>It sounds silly, but although Pac-Man was an ideal candidate for a
+project due to its level of complexity, I've never really <i>liked</i>
+Pac-Man as a game.  Because I don't like it much, I haven't actually
+played it much, so I don't know much about its internal game
+mechanics.  Late in development, a conversation with a non-programmer friend who has
+played the game extensively revealed that the ghosts supposedly move on
+pre-defined paths and don't actually have any dynamic AI, which would
+have made parts of the game much easier to code (for instance, it
+would have completely obviated the need for shortest path algorithms).
+Also, in the
+middle of development I realized that because the center of the
+ghost's home base (the code refers to this as the "asylum") wasn't on
+a "tile boundary", extra code had to be written to deal with this;
+this extra code complicated the final project and made it harder to
+read.  Had I understood the problem space better, I may have been able
+to notice this earlier and thus I may have been able to design the
+architecture to seamlessly support it.
+<P>
+<B>Not writing out the "goals" section of this post-mortem
+before starting the project.</B>
+<P>
+Although I had thought about the goals before starting the project, I
+never actually wrote them down until starting this post-mortem.
+Having a solid, written document of my goals would have helped me in
+the instances when I felt directionless or overwhelmed by the task at
+hand (especially goal about developing better programming habits,
+which I tended to forget from time to time as I got wrapped up in the
+project).  To some extent, this indicates a need for some kind of
+"programmer bill of rights" or "the seven habits of highly effective
+coders" (heh, heh) that I can refer to whenever I start
+getting frustrated with coding so I can stay focused.
+I may have to write (or find) something like this in the future.
+<P>
+<B>Fixed point math.</B>
+<P>
+I mostly implemented fixed-point math for educational purposes; I
+realize that many processors are now about as fast (sometimes faster) at floating-point
+math as with integer math, and of course efficiency isn't even much of
+a concern with a project as relatively simple as this.  While
+implementing fixed-point math was fun, the problem was that the
+fixed-point numbers were encoded in integers, and although a typedef
+was defined for fixed point numbers, C still viewed all fixed point
+numbers as ints.  This made it extremely easy to accidentally pass an
+int as a fixed-point number and vice versa, as there was effectively
+no type checking to discriminate between the two types.  This led to a
+number of bugs that were hard to squish. (As mentioned earlier,
+though, I should have prefixed all fixed-point variables with
+<TT>fix_</TT>, which would have helped prevent mistakes.)
+<I>Addendum:</I> When attempting to compile this using gcc with Apple's
+Project Manager on OS X, the compiler did treat <tt>fixed</tt> as a
+separate type and raised warnings when a <tt>fixed</tt> was being used as
+an <tt>int</tt> and vice versa.  I wish the MS VC++ compiler did the same.
+<P>
+</UL>
+<h3>Conclusion:</h3>
+<UL>
+<P>Overall, I was satisfied with the outcome of the project.  Through
+coding procedurally, I was able to gain a better understanding of how
+and why object-oriented methodologies evolved, and hopefully this will
+help me be a better programmer in the long run.  This post-mortem will
+also help me figure out how to do things better the next time around.
+<P>
+</UL>
+<h3>Game Data:</h3>
+<P>
+<UL>
+<B>Length of development:</B> 3 weeks<BR>
+<B>Development software used:</B> Microsoft Visual C++ .NET Academic,
+Adobe Photoshop, Microsoft Sound Recorder, Apple Project Builder, GNU
+Emacs, GNU Make/Automake/Autoconf, GNU C Compiler (gcc)<BR>
+<B>Total size of project code:</B> 178,175 bytes
+<BR>
+</UL>
